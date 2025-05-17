@@ -1,4 +1,4 @@
-const { faker, da } = require('@faker-js/faker');
+const { faker, da, tr } = require('@faker-js/faker');
 const mysql = require("mysql2");
 const express = require("express");
 const app = express();
@@ -117,6 +117,47 @@ app.post("/user" , (req,res) => {
         
     }
 })
+
+app.get("/user/:id/delete" , (req,res) => {
+    let { id } = req.params;
+    q = `SELECT * FROM user where id ='${id}'`;
+    try{
+        connection.query(q,(err,result) => {
+            if(err) throw err;
+            let user = result[0];
+            res.render("delete.ejs" , {user})
+        })
+    }catch(err){
+        console.log(err);
+
+    }
+});
+app.delete("/user/:id" , (req,res) => {
+    let { id } = req.params;
+    let { password } = req.body; 
+    let q1 = `SELECT password FROM user WHERE id = '${id}'`; 
+    try{
+        connection.query(q1, (err, result) => {
+            if(err) throw err;
+            if(result.length === 0){
+                return res.send("user not found"); 
+            }
+            let storedPassword = result[0].password;
+            if(password == storedPassword){ 
+                let q2 = `DELETE FROM user WHERE id = '${id}'`;
+                connection.query(q2, (err, result) => {
+                    if(err) throw err;
+                    res.redirect("/user");
+                });
+            } else {
+                res.send("password is wrong"); 
+            }
+        });
+    }catch(err){
+        console.log(err);
+        res.send("An error occurred during deletion"); 
+    }
+});
 
 
 app.listen(port , () => {
